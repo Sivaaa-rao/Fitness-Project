@@ -1,36 +1,35 @@
 package com.fitness.userservice.models;
 
-import jakarta.persistence.*;
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users")
+@Document(collection = "users")
 @Data
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
+    @Indexed(unique = true)
     private String keycloakId;
 
-    @Column(unique = true)
+    @Indexed(unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String password;
     private String firstName;
     private String lastName;
 
-    @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
 
-    @CreationTimestamp
+    @CreatedDate
     private LocalDateTime createdAt;
 
-    @UpdateTimestamp
+    @LastModifiedDate
     private LocalDateTime updatedAt;
 }

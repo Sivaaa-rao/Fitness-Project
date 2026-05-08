@@ -22,6 +22,8 @@ public class Activity {
     private ActivityType type;
     private Integer duration;
     private Integer caloriesBurned;
+    private String description;
+    private String imageUrl;
     private LocalDateTime startTime;
 
     @Field("metrics")

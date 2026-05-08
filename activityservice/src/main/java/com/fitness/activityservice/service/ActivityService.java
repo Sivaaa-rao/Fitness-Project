@@ -39,6 +39,8 @@ public class ActivityService {
                 .type(request.getType())
                 .duration(request.getDuration())
                 .caloriesBurned(request.getCaloriesBurned())
+                .description(request.getDescription())
+                .imageUrl(request.getImageUrl())
                 .startTime(request.getStartTime())
                 .additionalMetrics(request.getAdditionalMetrics())
                 .build();
@@ -62,6 +64,8 @@ public class ActivityService {
         response.setType(activity.getType());
         response.setDuration(activity.getDuration());
         response.setCaloriesBurned(activity.getCaloriesBurned());
+        response.setDescription(activity.getDescription());
+        response.setImageUrl(activity.getImageUrl());
         response.setStartTime(activity.getStartTime());
         response.setAdditionalMetrics(activity.getAdditionalMetrics());
         response.setCreatedAt(activity.getCreatedAt());
@@ -111,6 +115,8 @@ public class ActivityService {
         existing.setType(request.getType());
         existing.setDuration(request.getDuration());
         existing.setCaloriesBurned(request.getCaloriesBurned());
+        existing.setDescription(request.getDescription());
+        existing.setImageUrl(request.getImageUrl());
         existing.setStartTime(request.getStartTime());
         existing.setAdditionalMetrics(request.getAdditionalMetrics());
 

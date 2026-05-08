@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router';
 import { getActivities } from '../services/api';
-import { Calendar, Clock, Flame, ArrowLeft, TrendingUp, Droplet } from 'lucide-react';
+import { Calendar, Clock, Flame, ArrowLeft, TrendingUp, Droplet, Search, SlidersHorizontal } from 'lucide-react';
+import ActivityStats from './ActivityStats';
 
 const AllActivities = () => {
   const [activities, setActivities] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL');
+  const [sortBy, setSortBy] = useState('newest');
   const navigate = useNavigate();
 
   const fetchActivities = async () => {
@@ -29,6 +33,43 @@ const AllActivities = () => {
       default: return null;
     }
   };
+
+  const activityTypes = Array.from(new Set(activities.map((activity) => activity.type))).sort();
+
+  const filteredActivities = activities
+    .filter((activity) => {
+      const metrics = activity.additionalMetrics || {};
+      const searchableText = [
+        activity.type,
+        activity.description,
+        metrics.timeOfDay,
+        metrics.mealTiming,
+        activity.duration,
+        activity.caloriesBurned
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      const matchesSearch = searchableText.includes(searchTerm.toLowerCase());
+      const matchesType = typeFilter === 'ALL' || activity.type === typeFilter;
+
+      return matchesSearch && matchesType;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'duration') {
+        return (Number(b.duration) || 0) - (Number(a.duration) || 0);
+      }
+
+      if (sortBy === 'calories') {
+        return (Number(b.caloriesBurned) || 0) - (Number(a.caloriesBurned) || 0);
+      }
+
+      const dateA = new Date(a.createdAt || 0).getTime();
+      const dateB = new Date(b.createdAt || 0).getTime();
+
+      return sortBy === 'oldest' ? dateA - dateB : dateB - dateA;
+    });
 
   return (
     <div className="min-h-screen bg-gray-900 py-8 px-4">
@@ -55,6 +96,46 @@ const AllActivities = () => {
           <h1 className="text-4xl font-bold text-white mb-2">All Activities</h1>
           <p className="text-gray-400 mb-8">Total Activities: {activities.length}</p>
 
+          <ActivityStats activities={activities} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_auto] gap-3 mb-8">
+            <label className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search type, time, meal, calories..."
+                className="w-full bg-gray-900 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500"
+              />
+            </label>
+
+            <label className="relative">
+              <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <select
+                value={typeFilter}
+                onChange={(event) => setTypeFilter(event.target.value)}
+                className="w-full lg:w-48 bg-gray-900 border border-gray-700 rounded-lg py-3 pl-10 pr-4 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="ALL">All types</option>
+                {activityTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="w-full lg:w-48 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="duration">Longest duration</option>
+              <option value="calories">Most calories</option>
+            </select>
+          </div>
+
           {activities.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-400 text-lg">
@@ -63,7 +144,7 @@ const AllActivities = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activities.map((activity) => {
+              {filteredActivities.map((activity) => {
                 const metrics = activity.additionalMetrics || {};
                 const prettyTimeOfDay = formatTimeOfDay(metrics.timeOfDay);
 
@@ -73,6 +154,19 @@ const AllActivities = () => {
                     onClick={() => navigate(`/activities/${activity.id}`)}
                     className="group bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:border-blue-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20"
                   >
+                    {activity.imageUrl && (
+                      <div className="mb-4 overflow-hidden rounded-lg border border-gray-700 bg-gray-950">
+                        <img
+                          src={activity.imageUrl}
+                          alt={`${activity.type} activity`}
+                          className="h-40 w-full object-contain transition duration-300 group-hover:scale-[1.02]"
+                          onError={(event) => {
+                            event.currentTarget.parentElement.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-2xl font-bold text-blue-400 group-hover:text-blue-300 transition">
                         {activity.type}
@@ -115,6 +209,12 @@ const AllActivities = () => {
                         </div>
                       )}
 
+                      {activity.description && (
+                        <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">
+                          {activity.description}
+                        </p>
+                      )}
+
                       {activity.date && (
                         <div className="flex items-center gap-3 text-gray-300">
                           <Calendar className="text-green-400" size={18} />
@@ -133,6 +233,12 @@ const AllActivities = () => {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {activities.length > 0 && filteredActivities.length === 0 && (
+            <div className="text-center py-12 border border-gray-700 rounded-lg bg-gray-900/40">
+              <p className="text-gray-400 text-lg">No activities match your filters.</p>
             </div>
           )}
         </div>

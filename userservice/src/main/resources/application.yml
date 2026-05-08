@@ -2,4 +2,17 @@ spring:
   application:
     name: user-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  data:
+    mongodb:
+      uri: ${USER_MONGODB_URI:mongodb://mongo:27017/fitness-micro-user}
+      database: ${USER_MONGODB_DATABASE:fitness-micro-user}
+      auto-index-creation: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://eureka:8761/eureka/}
+
+server:
+  port: ${USER_SERVICE_PORT:8081}

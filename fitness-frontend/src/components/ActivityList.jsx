@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router';
 import { getActivities } from '../services/api';
 import { Calendar, Clock, Flame, Droplet } from 'lucide-react';
+import ActivityStats from './ActivityStats';
 
 const ActivityList = ({ limit, showSeeMore = false }) => {
   const [activities, setActivities] = useState([]);
@@ -34,6 +35,8 @@ const ActivityList = ({ limit, showSeeMore = false }) => {
 
   return (
     <div className="mt-8">
+      <ActivityStats activities={activities} />
+
       <h2 className="text-2xl font-bold text-white mb-6">Recent Activities</h2>
       
       {activities.length === 0 ? (
@@ -54,6 +57,19 @@ const ActivityList = ({ limit, showSeeMore = false }) => {
                   onClick={() => navigate(`/activities/${activity.id}`)}
                   className="group bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:border-blue-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20"
                 >
+                  {activity.imageUrl && (
+                    <div className="mb-4 overflow-hidden rounded-lg border border-gray-700 bg-gray-950">
+                      <img
+                        src={activity.imageUrl}
+                        alt={`${activity.type} activity`}
+                        className="h-40 w-full object-contain transition duration-300 group-hover:scale-[1.02]"
+                        onError={(event) => {
+                          event.currentTarget.parentElement.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-2xl font-bold text-blue-400 group-hover:text-blue-300 transition">
                       {activity.type}
@@ -94,6 +110,12 @@ const ActivityList = ({ limit, showSeeMore = false }) => {
                           Water: <span className="font-semibold text-white">{metrics.waterIntakeMl} ml</span>
                         </span>
                       </div>
+                    )}
+
+                    {activity.description && (
+                      <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">
+                        {activity.description}
+                      </p>
                     )}
 
                     {activity.date && (

@@ -29,10 +29,10 @@ public class KeycloakUserSyncFilter implements WebFilter {
             return chain.filter(exchange);
         }
 
-        String userId = exchange.getRequest().getHeaders().getFirst("X-User-ID");
         String token = exchange.getRequest().getHeaders().getFirst("Authorization");
         RegisterRequest registerRequest = getUserDetails(token);
-        if (userId == null) {
+        String userId = exchange.getRequest().getHeaders().getFirst("X-User-ID");
+        if (registerRequest != null && registerRequest.getKeycloakId() != null) {
             userId = registerRequest.getKeycloakId();
         }
 
@@ -41,7 +41,7 @@ public class KeycloakUserSyncFilter implements WebFilter {
             return userService.validateUser(userId)
                     .flatMap(exist -> {
                         if (!exist) {
-                            if (registerRequest != null) {
+                            if (registerRequest != null && registerRequest.getEmail() != null) {
                                 return userService.registerUser(registerRequest)
                                         .then(Mono.empty());
                             } else {
@@ -64,6 +64,10 @@ public class KeycloakUserSyncFilter implements WebFilter {
     }
 
     private RegisterRequest getUserDetails(String token) {
+        if (token == null || !token.startsWith("Bearer ")) {
+            return null;
+        }
+
         try {
             String tokenWithoutBearer = token.replace("Bearer", "").trim();
             SignedJWT signedJWT = SignedJWT.parse(tokenWithoutBearer);
@@ -78,7 +82,8 @@ public class KeycloakUserSyncFilter implements WebFilter {
 
             return request;
         } catch (ParseException e) {
-            throw new RuntimeException(e);
+            log.warn("Unable to parse bearer token for user sync", e);
+            return null;
         }
     }
 }

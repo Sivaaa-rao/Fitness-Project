@@ -1,20 +1,24 @@
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://eureka:8761/eureka/}
 keycloak:
   admin:
-    server-url: http://localhost:8181
-    realm: fitness-app
-    client-id: fitlife-backend
-    client-secret: LQcmBO2yZ2m7yCFZNSaiFzIthMeABT3I
+    server-url: ${KEYCLOAK_SERVER_URL:http://keycloak:8080}
+    realm: ${KEYCLOAK_REALM:fitness}
+    client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:fitlife-backend}
+    client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:}
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
 
 spring:
   security:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: http://localhost:8181/realms/fitness-app/protocol/openid-connect/certs
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:${KEYCLOAK_SERVER_URL:http://keycloak:8080}/realms/${KEYCLOAK_REALM:fitness}/protocol/openid-connect/certs}
   cloud:
     gateway:
       server:
@@ -36,4 +40,4 @@ spring:
                 - Path=/api/recommendations/**
 
 server:
-  port: 8080
+  port: ${GATEWAY_SERVICE_PORT:8080}

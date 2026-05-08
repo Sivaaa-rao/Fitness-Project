@@ -1,18 +1,14 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/fitness-micro-user
-    username: postgres
-    password: admin@12345
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    mongodb:
+      uri: ${USER_MONGODB_URI:mongodb://mongo:27017/fitness-micro-user}
+      database: ${USER_MONGODB_DATABASE:fitness-micro-user}
+      auto-index-creation: true
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://eureka:8761/eureka/}
 
 server:
-  port: 8081
+  port: ${USER_SERVICE_PORT:8081}

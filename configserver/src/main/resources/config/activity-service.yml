@@ -1,10 +1,10 @@
 spring:
   data:
     mongodb:
-      uri: mongodb://localhost:27017/aiactivityfitness
-      database: aiactivityfitness
+      uri: ${ACTIVITY_MONGODB_URI:mongodb://mongo:27017/aiactivityfitness}
+      database: ${ACTIVITY_MONGODB_DATABASE:aiactivityfitness}
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -12,14 +12,14 @@ spring:
 
 kafka:
   topic:
-    name: activity-events
-    delete-name: activity-delete-events
+    name: ${KAFKA_ACTIVITY_TOPIC:activity-events}
+    delete-name: ${KAFKA_ACTIVITY_DELETE_TOPIC:activity-delete-events}
 
 eureka:
   client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://eureka:8761/eureka/}
 
 server:
-  port: 8082
+  port: ${ACTIVITY_SERVICE_PORT:8082}
 

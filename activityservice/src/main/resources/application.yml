@@ -2,4 +2,26 @@ spring:
   application:
     name: activity-service
   config:
-    import: optional:configserver:http://localhost:8888
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  data:
+    mongodb:
+      uri: ${ACTIVITY_MONGODB_URI:mongodb://mongo:27017/aiactivityfitness}
+      database: ${ACTIVITY_MONGODB_DATABASE:aiactivityfitness}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:kafka:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+kafka:
+  topic:
+    name: ${KAFKA_ACTIVITY_TOPIC:activity-events}
+    delete-name: ${KAFKA_ACTIVITY_DELETE_TOPIC:activity-delete-events}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULT_ZONE:http://eureka:8761/eureka/}
+
+server:
+  port: ${ACTIVITY_SERVICE_PORT:8082}

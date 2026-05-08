@@ -12,6 +12,8 @@ public class ActivityRequest {
     private ActivityType type;
     private Integer duration;
     private Integer caloriesBurned;
+    private String description;
+    private String imageUrl;
     private LocalDateTime startTime;
     private Map<String, Object> additionalMetrics;
 }

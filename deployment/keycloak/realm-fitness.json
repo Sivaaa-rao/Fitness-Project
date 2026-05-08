@@ -1,0 +1,56 @@
+{
+  "realm": "fitness",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "users": [
+    {
+      "username": "service-account-fitlife-backend",
+      "enabled": true,
+      "serviceAccountClientId": "fitlife-backend",
+      "clientRoles": {
+        "realm-management": [
+          "manage-users",
+          "view-users"
+        ]
+      }
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "oauth2-pkce-client",
+      "name": "Fitness Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "redirectUris": [
+        "http://localhost:5173",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173"
+      ]
+    },
+    {
+      "clientId": "fitlife-backend",
+      "name": "Fitness Backend",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "local-dev-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ]
+}

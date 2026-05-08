@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Zap, Shield, Target, Activity, Calendar, Users } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
 const CompleteRecommendation = ({ userId, token }) => {
   const [recommendation, setRecommendation] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +18,7 @@ const CompleteRecommendation = ({ userId, token }) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8080/api/recommendations/user/${userId}`,
+        `${API_URL}/recommendations/user/${userId}`,
         {
           method: 'GET',
           headers: {

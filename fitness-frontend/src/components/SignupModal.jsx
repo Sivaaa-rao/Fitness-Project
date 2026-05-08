@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Mail, Lock, User, CheckCircle, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
 const SignupModal = ({ isOpen, onClose, onSignupSuccess }) => {
   const [formData, setFormData] = useState({
     email: '',
@@ -67,7 +69,7 @@ const SignupModal = ({ isOpen, onClose, onSignupSuccess }) => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

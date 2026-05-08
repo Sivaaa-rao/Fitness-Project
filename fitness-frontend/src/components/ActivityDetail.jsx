@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router';
 import { getActivityDetail, deleteActivity, getActivityRecommendation, updateActivity } from '../services/api';
-import { ArrowLeft, Calendar, Clock, Flame, TrendingUp, AlertCircle, Lightbulb, ShieldCheck, Droplet } from 'lucide-react';
+import { isImageUploadConfigured, uploadActivityImage } from '../services/imageUpload';
+import { ArrowLeft, Calendar, Clock, Flame, TrendingUp, AlertCircle, Lightbulb, ShieldCheck, Droplet, Image as ImageIcon, FileText } from 'lucide-react';
 
 const ActivityDetail = () => {
+  const imageUploadReady = isImageUploadConfigured();
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -14,10 +16,14 @@ const ActivityDetail = () => {
   const [recError, setRecError] = useState(null);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [editImageFile, setEditImageFile] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState('');
   const [editData, setEditData] = useState({
     type: '',
     duration: '',
     caloriesBurned: '',
+    description: '',
+    imageUrl: '',
     timeOfDay: '',
     mealTiming: '',
     waterIntakeMl: ''
@@ -84,6 +90,8 @@ const ActivityDetail = () => {
         type: activity.type || '',
         duration: activity.duration ?? '',
         caloriesBurned: activity.caloriesBurned ?? '',
+        description: activity.description || '',
+        imageUrl: activity.imageUrl || '',
         timeOfDay: metrics.timeOfDay || '',
         mealTiming: metrics.mealTiming || '',
         waterIntakeMl: metrics.waterIntakeMl ?? ''
@@ -116,10 +124,16 @@ const ActivityDetail = () => {
     e.preventDefault();
 
     try {
+      const uploadedImageUrl = editImageFile
+        ? await uploadActivityImage(editImageFile)
+        : null;
+
       const updatedPayload = {
         type: editData.type,
         duration: Number(editData.duration),
         caloriesBurned: Number(editData.caloriesBurned),
+        description: editData.description.trim() || null,
+        imageUrl: uploadedImageUrl || editData.imageUrl || null,
         startTime: activity.startTime,
         additionalMetrics: {
           ...(activity.additionalMetrics || {}),
@@ -141,6 +155,8 @@ const ActivityDetail = () => {
         type: editData.type,
         duration: Number(editData.duration),
         caloriesBurned: Number(editData.caloriesBurned),
+        description: editData.description.trim() || null,
+        imageUrl: uploadedImageUrl || editData.imageUrl || null,
         additionalMetrics: {
           ...(prev.additionalMetrics || {}),
           timeOfDay: editData.timeOfDay,
@@ -152,6 +168,8 @@ const ActivityDetail = () => {
       }));
 
       setIsEditing(false);
+      setEditImageFile(null);
+      setEditImagePreview('');
     } catch (error) {
       if (error.response) {
         console.error(
@@ -168,6 +186,29 @@ const ActivityDetail = () => {
 
   const handleEditFieldChange = (field, value) => {
     setEditData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditImageChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      setEditImageFile(null);
+      setEditImagePreview('');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please choose an image file.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be 5 MB or smaller.');
+      return;
+    }
+
+    setEditImageFile(file);
+    setEditImagePreview(URL.createObjectURL(file));
   };
 
   if (loadingActivity || !activity) {
@@ -202,6 +243,29 @@ const ActivityDetail = () => {
           </div>
           Activity Details
         </h1>
+
+        {activity.imageUrl && (
+          <div className="mb-6 overflow-hidden rounded-xl border border-gray-700 bg-gray-950">
+            <img
+              src={activity.imageUrl}
+              alt={`${activity.type} activity`}
+              className="max-h-[32rem] w-full object-contain"
+              onError={(event) => {
+                event.currentTarget.parentElement.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
+        {activity.description && (
+          <div className="mb-6 bg-gray-700/40 rounded-lg p-5 border border-gray-600">
+            <div className="flex items-center gap-3 mb-2">
+              <FileText className="text-blue-300" size={20} />
+              <p className="text-gray-400 text-sm font-medium">Activity Note</p>
+            </div>
+            <p className="text-gray-200 leading-relaxed whitespace-pre-line">{activity.description}</p>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Activity Type */}
@@ -284,6 +348,17 @@ const ActivityDetail = () => {
                 : 'Not specified'}
             </p>
           </div>
+
+          {/* Image URL */}
+          <div className="bg-gray-700/50 rounded-lg p-5 border border-gray-600">
+            <div className="flex items-center gap-3 mb-2">
+              <ImageIcon className="text-violet-300" size={20} />
+              <p className="text-gray-400 text-sm font-medium">Image</p>
+            </div>
+            <p className="text-xl font-semibold text-white break-words">
+              {activity.imageUrl ? 'Added' : 'Not specified'}
+            </p>
+          </div>
         </div>
 
         <div className="mt-6 flex gap-3">
@@ -348,6 +423,59 @@ const ActivityDetail = () => {
                   onChange={(e) => handleEditFieldChange('caloriesBurned', e.target.value)}
                   className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
                 />
+              </div>
+
+              <div>
+                <label className="block text-gray-300 mb-1">Activity Note</label>
+                <textarea
+                  value={editData.description}
+                  maxLength="500"
+                  onChange={(e) => handleEditFieldChange('description', e.target.value)}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 min-h-28 resize-y"
+                  placeholder="Add effort, mood, route, soreness, or anything you want to remember."
+                />
+                <p className="text-gray-500 text-xs mt-1">{editData.description.length}/500 characters</p>
+              </div>
+
+              <div>
+                <label className="block text-gray-300 mb-1">Activity Image</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={!imageUploadReady}
+                  onChange={handleEditImageChange}
+                  className="w-full bg-gray-700 text-white p-3 rounded-lg border border-gray-600 file:mr-4 file:rounded-md file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-white hover:file:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                />
+                {!imageUploadReady && (
+                  <p className="text-yellow-300 text-sm mt-2">
+                    Image upload needs Cloudinary config. You can still save the activity without changing the image.
+                  </p>
+                )}
+                {(editImagePreview || editData.imageUrl) && (
+                  <div className="mt-3 overflow-hidden rounded-lg border border-gray-700 bg-gray-950">
+                    <img
+                      src={editImagePreview || editData.imageUrl}
+                      alt="Updated activity preview"
+                      className="h-56 w-full object-contain"
+                      onError={(event) => {
+                        event.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                {editData.imageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditData(prev => ({ ...prev, imageUrl: '' }));
+                      setEditImageFile(null);
+                      setEditImagePreview('');
+                    }}
+                    className="mt-2 text-sm text-red-300 hover:text-red-200"
+                  >
+                    Remove current image
+                  </button>
+                )}
               </div>
 
               {/* Time of Day */}
