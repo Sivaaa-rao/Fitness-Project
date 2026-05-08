@@ -171,7 +171,7 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC_NAME: activity-events
       KAFKA_TOPIC_DELETE_NAME: activity-delete-events
-      GEMINI_API_URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent
+      GEMINI_API_URL: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
       - "8083:8083"

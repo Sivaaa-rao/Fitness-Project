@@ -21,10 +21,16 @@ public class ActivityAIService {
     private final ObjectMapper objectMapper;
 
     public Recommendation generateRecommendation(Activity activity) {
-        String prompt = createPromptForActivity(activity);
-        String aiResponse = geminiService.getRecommendations(prompt);
-        log.info("RESPONSE FROM AI {} ", aiResponse);
-        return processAIResponse(activity, aiResponse);
+        try {
+            String prompt = createPromptForActivity(activity);
+            String aiResponse = geminiService.getRecommendations(prompt);
+            log.info("RESPONSE FROM AI {} ", aiResponse);
+            return processAIResponse(activity, aiResponse);
+        } catch (Exception e) {
+            log.warn("Unable to generate Gemini recommendation. Saving fallback recommendation for activity {}",
+                    activity.getId(), e);
+            return createDefaultRecommendation(activity);
+        }
     }
 
     private Recommendation processAIResponse(Activity activity, String aiResponse) {
@@ -75,13 +81,28 @@ public class ActivityAIService {
     }
 
     private Recommendation createDefaultRecommendation(Activity activity) {
+        String type = activity.getType() == null ? "workout" : activity.getType().toString().toLowerCase();
+        String duration = activity.getDuration() == null ? "your planned duration" : activity.getDuration() + " minutes";
+        String calories = activity.getCaloriesBurned() == null ? "your recorded calories" : activity.getCaloriesBurned() + " calories";
+
         return Recommendation.builder()
                 .activityId(activity.getId())
                 .userId(activity.getUserId())
-                .type(activity.getType().toString())
-                .recommendation("Unable to generate detailed analysis")
-                .improvements(Collections.singletonList("Continue with your current routine"))
-                .suggestions(Collections.singletonList("Consider consulting a fitness consultant"))
+                .type(activity.getType() == null ? "OTHER" : activity.getType().toString())
+                .recommendation(String.format(
+                        "Overall: Good job completing a %s session for %s and burning about %s.%n%n" +
+                                "Pace: Keep the intensity steady and avoid starting too fast.%n%n" +
+                                "Calories: This session shows useful effort; continue tracking calories with duration for better progress review.",
+                        type, duration, calories
+                ))
+                .improvements(Arrays.asList(
+                        "Consistency: Repeat similar sessions 3 to 4 times per week to build a stable routine",
+                        "Tracking: Record notes about energy level, hydration, and meal timing after each workout"
+                ))
+                .suggestions(Arrays.asList(
+                        "Recovery Walk: Add a 10 minute cooldown walk after the workout",
+                        "Progression: Increase duration or intensity gradually by 5 to 10 percent next week"
+                ))
                 .safety(Arrays.asList(
                         "Always warm up before exercise",
                         "Stay hydrated",
